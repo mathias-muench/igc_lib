@@ -405,9 +405,18 @@ class Thermal:
         enter_fix: a GNSSFix, entry point of the thermal
         exit_fix: a GNSSFix, exit point of the thermal
     """
-    def __init__(self, enter_fix, exit_fix):
-        self.enter_fix = enter_fix
-        self.exit_fix = exit_fix
+    def __init__(self, fixes):
+        self.fixes = fixes
+        self.enter_fix = fixes[0]
+        self.exit_fix = fixes[-1]
+        self._alt_loss = 0
+        self._alt_gain = 0
+        for i in range(len(self.fixes) - 1):
+            diff = self.fixes[i + 1].alt - self.fixes[i].alt
+            if diff < 0:
+                self._alt_loss += diff
+            else:
+                self._alt_gain += diff
 
     def time_change(self):
         """Returns the time spent in the thermal, seconds."""
@@ -422,6 +431,12 @@ class Thermal:
         if math.fabs(self.time_change()) < 1e-7:
             return 0.0
         return self.alt_change() / self.time_change()
+
+    def alt_loss(self):
+        return self._alt_loss
+
+    def alt_gain(self):
+        return self._alt_gain
 
     def __repr__(self):
         return self.__str__()
@@ -1161,7 +1176,7 @@ class Flight:
             elif circling_now and not fix.circling:
                 # Just ended circling
                 circling_now = False
-                thermal = Thermal(first_fix, fix)
+                thermal = Thermal(self.fixes[first_fix.index:fix.index])
                 if (thermal.time_change() >
                         self._config.min_time_for_thermal - 1e-5):
                     self.thermals.append(thermal)

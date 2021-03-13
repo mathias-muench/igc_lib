@@ -142,16 +142,16 @@ def dump_flight_to_csv(flight, track_filename_local, thermals_filename_local):
     track_filename = Path(track_filename_local).expanduser().absolute()
     with track_filename.open('wt') as csv:
         csv.write(u"timestamp,lat,lon,bearing,bearing_change_rate,"
-                  u"gsp,flying,circling\n")
+                  u"gsp,alt,flying,circling\n")
         for fix in flight.fixes:
-            csv.write(u"%f,%f,%f,%f,%f,%f,%s,%s\n" % (
+            csv.write(u"%f,%f,%f,%f,%f,%f,%f,%s,%s\n" % (
                 fix.timestamp, fix.lat, fix.lon,
                 fix.bearing, fix.bearing_change_rate,
-                fix.gsp, str(fix.flying), str(fix.circling)))
+                fix.gsp, fix.alt, str(fix.flying), str(fix.circling)))
 
     thermals_filename = Path(thermals_filename_local).expanduser().absolute()
     with thermals_filename.open('wt') as csv:
-        csv.write(u"timestamp_enter,timestamp_exit\n")
+        csv.write(u"timestamp_enter,timestamp_exit,time_change,alt_change,alt_gain,alt_loss,vertical_velocity\n")
         for thermal in flight.thermals:
-            csv.write(u"%f,%f\n" % (
-                thermal.enter_fix.timestamp, thermal.exit_fix.timestamp))
+            csv.write(u"%f,%f,%f,%f,%f,%f,%f\n" % (
+                thermal.enter_fix.timestamp, thermal.exit_fix.timestamp, thermal.time_change(), thermal.alt_change(), thermal.alt_gain(), thermal.alt_loss(), thermal.vertical_velocity()))

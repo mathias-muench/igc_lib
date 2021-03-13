@@ -195,6 +195,16 @@ class TestNapretFlightParsing(unittest.TestCase):
             self.assertLessEqual(glide.enter_fix.index, landing_index)
             self.assertLessEqual(glide.exit_fix.index, landing_index)
 
+    def testThermalAltLoss(self):
+        self.assertEqual(self.flight.thermals[0].alt_loss(), -7)
+
+    def testThermalAltGain(self):
+        self.assertEqual(self.flight.thermals[0].alt_gain(), 83)
+
+    def testThermalAltConsistent(self):
+        for thermal in self.flight.thermals:
+            self.assertEqual(thermal.alt_gain() + thermal.alt_loss(), thermal.alt_change())
+
 
 class TestNewIGCDateIncrement(unittest.TestCase):
 

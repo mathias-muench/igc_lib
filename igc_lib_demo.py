@@ -22,7 +22,7 @@ def print_flight_details(flight):
 
 
 def dump_flight(flight, input_file):
-    input_base_file = os.path.splitext(input_file)[0]
+    input_base_file = os.path.basename(os.path.splitext(input_file)[0])
     wpt_file = "%s-thermals.wpt" % input_base_file
     cup_file = "%s-thermals.cup" % input_base_file
     thermals_csv_file = "%s-thermals.csv" % input_base_file
