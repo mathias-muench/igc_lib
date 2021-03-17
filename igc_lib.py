@@ -29,7 +29,6 @@ import datetime
 import math
 import re
 import xml.dom.minidom
-from pathlib2 import Path
 
 from collections import defaultdict
 
@@ -617,8 +616,7 @@ class Flight:
         a_records = []
         i_records = []
         h_records = []
-        abs_filename = Path(filename).expanduser().absolute()
-        with abs_filename.open('r', encoding="ISO-8859-1") as flight_file:
+        with open(filename, 'r', encoding="ISO-8859-1") as flight_file:
             for line in flight_file:
                 line = line.replace('\n', '').replace('\r', '')
                 if not line:
