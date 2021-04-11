@@ -1,6 +1,5 @@
 import collections
 import simplekml
-from pathlib2 import Path
 
 
 def _degrees_float_to_degrees_minutes_seconds(dd, lon_or_lat):
@@ -35,7 +34,7 @@ def _degrees_float_to_degrees_minutes_seconds(dd, lon_or_lat):
     return ddmmss(hemisphere, degrees, minutes, seconds)
 
 
-def dump_thermals_to_wpt_file(flight, wptfilename_local, endpoints=False):
+def dump_thermals_to_wpt_file(flight, wptfilename, endpoints=False):
     """Dump flight's thermals to a .wpt file in Geo format.
 
     Args:
@@ -44,8 +43,7 @@ def dump_thermals_to_wpt_file(flight, wptfilename_local, endpoints=False):
         endpoints: optional argument. If true thermal endpoints as well
         as startpoints will be written with suffix END in the waypoint label.
     """
-    wptfilename = Path(wptfilename_local).expanduser().absolute()
-    with wptfilename.open('w') as wpt:
+    with open(wptfilename, 'w') as wpt:
         wpt.write(u"$FormatGEO\n")
 
         for x, thermal in enumerate(flight.thermals):
@@ -74,15 +72,14 @@ def dump_thermals_to_wpt_file(flight, wptfilename_local, endpoints=False):
                     flight.thermals[x].exit_fix.gnss_alt))
 
 
-def dump_thermals_to_cup_file(flight, cup_filename_local):
+def dump_thermals_to_cup_file(flight, cup_filename):
     """Dump flight's thermals to a .cup file (SeeYou).
 
     Args:
         flight: an igc_lib.Flight, the flight to be written
         cup_filename_local: a string, the name of the file to be written.
     """
-    cup_filename = Path(cup_filename_local).expanduser().absolute()
-    with cup_filename.open('wt') as wpt:
+    with open(cup_filename, 'wt') as wpt:
         wpt.write(u'name,code,country,lat,')
         wpt.write(u'lon,elev,style,rwdir,rwlen,freq,desc,userdata,pics\n')
 
@@ -103,7 +100,7 @@ def dump_thermals_to_cup_file(flight, cup_filename_local):
             write_fix(u'%02d_END' % i, thermal.exit_fix)
 
 
-def dump_flight_to_kml(flight, kml_filename_local):
+def dump_flight_to_kml(flight, kml_filename):
     """Dumps the flight to KML format.
 
     Args:
@@ -127,11 +124,10 @@ def dump_flight_to_kml(flight, kml_filename_local):
     for i, thermal in enumerate(flight.thermals):
         add_point(name="thermal_%02d" % i, fix=thermal.enter_fix)
         add_point(name="thermal_%02d_END" % i, fix=thermal.exit_fix)
-        kml_filename = Path(kml_filename_local).expanduser().absolute()
-    kml.save(kml_filename.as_posix())
+    kml.save(kml_filename)
 
 
-def dump_flight_to_csv(flight, track_filename_local, thermals_filename_local):
+def dump_flight_to_csv(flight, track_filename, thermals_filename):
     """Dumps flight data to CSV files.
 
     Args:
@@ -139,8 +135,7 @@ def dump_flight_to_csv(flight, track_filename_local, thermals_filename_local):
         track_filename_local: a string, the name of the output CSV with track data
         thermals_filename_local: a string, the name of the output CSV with thermal data
     """
-    track_filename = Path(track_filename_local).expanduser().absolute()
-    with track_filename.open('wt') as csv:
+    with open(track_filename, 'wt') as csv:
         csv.write(u"timestamp,lat,lon,bearing,bearing_change_rate,"
                   u"gsp,flying,circling\n")
         for fix in flight.fixes:
@@ -149,8 +144,7 @@ def dump_flight_to_csv(flight, track_filename_local, thermals_filename_local):
                 fix.bearing, fix.bearing_change_rate,
                 fix.gsp, str(fix.flying), str(fix.circling)))
 
-    thermals_filename = Path(thermals_filename_local).expanduser().absolute()
-    with thermals_filename.open('wt') as csv:
+    with open(thermals_filename, 'wt') as csv:
         csv.write(u"timestamp_enter,timestamp_exit\n")
         for thermal in flight.thermals:
             csv.write(u"%f,%f\n" % (
