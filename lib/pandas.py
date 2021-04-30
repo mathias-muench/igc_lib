@@ -36,6 +36,11 @@ def flight_to_df(flight):
             "circling",
         ],
     )
+    df["thermalling"] = False
+    for i in flight.thermals:
+        df.iloc[
+            i.enter_fix.index:i.exit_fix.index, df.columns.get_loc("thermalling")
+        ] = True
     return df
 
 
