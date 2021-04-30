@@ -552,10 +552,10 @@ class FlightParsingConfig(object):
 
     # Minimum time between fixes to calculate bearing change, seconds.
     # See the usage for a more detailed comment on why this is useful.
-    min_time_for_bearing_change = 5.0
+    min_time_for_bearing_change = 4.0
 
     # Minimum time to consider circling a thermal, seconds.
-    min_time_for_thermal = 60.0
+    min_time_for_thermal = 30.0
 
 
 class Flight:

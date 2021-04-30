@@ -41,6 +41,13 @@ def flight_to_df(flight):
         df.iloc[
             i.enter_fix.index:i.exit_fix.index, df.columns.get_loc("thermalling")
         ] = True
+    df["phase"] = df.thermalling.diff() | df.flying.diff()
+    ph = None
+    for (i, r) in df.iterrows():
+        if not ph or r.phase:
+            ph = r.timestamp
+        df.loc[i, "phase"] = ph
+
     return df
 
 
