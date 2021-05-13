@@ -680,7 +680,7 @@ class Flight:
             self.valid = False
             return
 
-        self.IGC = "%s%s%s0" % (self.DTE, self.fr_manuf_code, self.fr_uniq_id)
+        self.IGC = "%s%s%s0" % (self.YYMMDD, self.fr_manuf_code, self.fr_uniq_id)
 
         for fix in self.fixes:
             fix.set_flight(self)
@@ -739,7 +739,7 @@ class Flight:
                     epoch = datetime.datetime(year=1970, month=1, day=1)
                     date = datetime.datetime(year=year, month=month, day=day)
                     self.date_timestamp = (date - epoch).total_seconds()
-            self.DTE = record[5:]
+            self.YYMMDD = "".join([yy, mm, dd])
         elif record[0:5] == 'HFGTY':
             match = re.match(
                 'HFGTY[ ]*GLIDER[ ]*TYPE[ ]*:[ ]*(.*)',
