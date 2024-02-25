@@ -8,7 +8,6 @@ a directory.
 
 import os
 import sys
-from Bio.Alphabet import Alphabet
 from Bio.HMM.MarkovModel import MarkovModelBuilder
 from Bio.HMM.Trainer import BaumWelchTrainer
 from Bio.HMM.Trainer import TrainingSequence
@@ -29,12 +28,8 @@ def list_igc_files(directory):
 
 
 def initial_markov_model_circling():
-    state_alphabet = Alphabet()
-    state_alphabet.letters = list("cs")
-    emissions_alphabet = Alphabet()
-    emissions_alphabet.letters = list("CS")
 
-    mmb = MarkovModelBuilder(state_alphabet, emissions_alphabet)
+    mmb = MarkovModelBuilder(list("cs"), list("CS"))
     mmb.set_initial_probabilities({'c': 0.20, 's': 0.80})
     mmb.allow_all_transitions()
     mmb.set_transition_score('c', 'c', 0.90)
@@ -50,12 +45,8 @@ def initial_markov_model_circling():
 
 
 def initial_markov_model_flying():
-    state_alphabet = Alphabet()
-    state_alphabet.letters = list("fs")
-    emissions_alphabet = Alphabet()
-    emissions_alphabet.letters = list("FS")
 
-    mmb = MarkovModelBuilder(state_alphabet, emissions_alphabet)
+    mmb = MarkovModelBuilder(list("fs"), list("FS"))
     mmb.set_initial_probabilities({'f': 0.20, 's': 0.80})
     mmb.allow_all_transitions()
     mmb.set_transition_score('f', 'f', 0.99)
@@ -71,10 +62,6 @@ def initial_markov_model_flying():
 
 
 def get_circling_sequence(flight):
-    state_alphabet = Alphabet()
-    state_alphabet.letters = list("cs")
-    emissions_alphabet = Alphabet()
-    emissions_alphabet.letters = list("CS")
 
     emissions = []
     for x in flight._circling_emissions():
@@ -82,16 +69,12 @@ def get_circling_sequence(flight):
             emissions.append("C")
         else:
             emissions.append("S")
-    emissions = Seq("".join(emissions), emissions_alphabet)
-    empty_states = Seq("", state_alphabet)
+    emissions = Seq("".join(emissions))
+    empty_states = Seq("")
     return TrainingSequence(emissions, empty_states)
 
 
 def get_flying_sequence(flight):
-    state_alphabet = Alphabet()
-    state_alphabet.letters = list("fs")
-    emissions_alphabet = Alphabet()
-    emissions_alphabet.letters = list("FS")
 
     emissions = []
     for x in flight._flying_emissions():
@@ -99,8 +82,8 @@ def get_flying_sequence(flight):
             emissions.append("F")
         else:
             emissions.append("S")
-    emissions = Seq("".join(emissions), emissions_alphabet)
-    empty_states = Seq("", state_alphabet)
+    emissions = Seq("".join(emissions))
+    empty_states = Seq("")
     return TrainingSequence(emissions, empty_states)
 
 
@@ -116,42 +99,42 @@ def get_training_sequences(files):
 
 
 def stop_function(log_likelihood_change, num_iterations):
-    print "num_iterations: %d" % num_iterations,
-    print "log_likelihood_change: %f" % log_likelihood_change
+    print("num_iterations: %d" % num_iterations,)
+    print("log_likelihood_change: %f" % log_likelihood_change)
     return log_likelihood_change < 0.05 and num_iterations > 5
 
 
 def main():
     if len(sys.argv) != 2:
-        print "Usage: %s directory_with_igc_files"
+        print("Usage: %s directory_with_igc_files")
         sys.exit(1)
 
     learning_dir = sys.argv[1]
     files = list_igc_files(learning_dir)
-    print "Found %d IGC files in '%s'." % (len(files), learning_dir)
+    print("Found %d IGC files in '%s'." % (len(files), learning_dir))
 
-    print "Reading and processing files"
+    print("Reading and processing files")
     circling_sequences, flying_sequences = get_training_sequences(files)
-    print "Found %d valid tracks." % len(circling_sequences)
+    print("Found %d valid tracks." % len(circling_sequences))
 
     if len(circling_sequences) == 0:
-        print "Found no valid tracks. Aborting."
+        print("Found no valid tracks. Aborting.")
         sys.exit(1)
 
     flying_mm = initial_markov_model_flying()
     trainer = BaumWelchTrainer(flying_mm)
     trainer.train(flying_sequences, stop_function)
-    print "Flying model training complete!"
+    print("Flying model training complete!")
 
     circling_mm = initial_markov_model_circling()
     trainer = BaumWelchTrainer(circling_mm)
     trainer.train(circling_sequences, stop_function)
-    print "Circling model training complete!"
+    print("Circling model training complete!")
 
-    print "flying_mm.transition_prob:", flying_mm.transition_prob
-    print "flying_mm.emission_prob:", flying_mm.emission_prob
-    print "circling_mm.transition_prob:", circling_mm.transition_prob
-    print "circling_mm.emission_prob:", circling_mm.emission_prob
+    print("flying_mm.transition_prob:", flying_mm.transition_prob)
+    print("flying_mm.emission_prob:", flying_mm.emission_prob)
+    print("circling_mm.transition_prob:", circling_mm.transition_prob)
+    print("circling_mm.emission_prob:", circling_mm.emission_prob)
 
 
 if __name__ == "__main__":

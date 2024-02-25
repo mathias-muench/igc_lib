@@ -280,11 +280,11 @@ class GNSSFix:
             The created GNSSFix object
         """
         match = re.match(
-            '^B' + '(\d\d)(\d\d)(\d\d)'
-            + '(\d\d)(\d\d)(\d\d\d)([NS])'
-            + '(\d\d\d)(\d\d)(\d\d\d)([EW])'
-            + '([AV])' + '([-\d]\d\d\d\d)' + '([-\d]\d\d\d\d)'
-            + '([0-9a-zA-Z\-]*).*$', B_record_line)
+            r'^B' + r'(\d\d)(\d\d)(\d\d)'
+            + r'(\d\d)(\d\d)(\d\d\d)([NS])'
+            + r'(\d\d\d)(\d\d)(\d\d\d)([EW])'
+            + r'([AV])' + r'([-\d]\d\d\d\d)' + r'([-\d]\d\d\d\d)'
+            + r'([0-9a-zA-Z\-]*).*$', B_record_line)
         if match is None:
             return None
         (hours, minutes, seconds,
@@ -733,7 +733,7 @@ class Flight:
     def _parse_h_record(self, record):
         if record[0:5] == 'HFDTE':
             match = re.match(
-                '(?:HFDTE|HFDTEDATE:[ ]*)(\d\d)(\d\d)(\d\d)',
+                r'(?:HFDTE|HFDTEDATE:[ ]*)(\d\d)(\d\d)(\d\d)',
                 record, flags=re.IGNORECASE)
             if match:
                 dd, mm, yy = [_strip_non_printable_chars(group) for group in match.groups()]
