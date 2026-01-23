@@ -26,7 +26,7 @@ def flight_to_dataframe(flight):
         pd.DataFrame({
             "lat": fix.lat,
             "lon": fix.lon,
-            "alt": fix.alt,
+            "alt": fix.press_alt,
             "gsp": fix.gsp,
             "bearing": fix.bearing,
             "bearing_change_rate": fix.bearing_change_rate,
