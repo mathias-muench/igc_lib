@@ -44,17 +44,15 @@ def flight_to_dataframe(flight):
     )
 
 def thermals_to_dataframe(flight):
-    """Converts a Flight's thermals to a pandas DataFrame.
+    """Converts a Flight's thermals to a pandas Series of durations.
 
     Args:
         flight: A Flight object (from igc_lib.py).
 
     Returns:
-        A DataFrame where each row is a Thermal, with columns for:
-        - duration: time spent in thermal (as timedelta)
-        - alt_change: altitude change (meters)
-
-        The index is set to the UTC datetime of the thermal entry.
+        A Series where:
+        - index is the UTC datetime of the thermal entry
+        - values are the duration of each thermal (as timedelta)
 
     Raises:
         ValueError: If the flight is invalid.
@@ -62,17 +60,12 @@ def thermals_to_dataframe(flight):
     if not flight.valid:
         raise ValueError("Flight is invalid. Check flight.notes for details.")
 
-    return (
-        pd.DataFrame({
-            "duration": pd.to_timedelta(thermal.time_change(), unit="s"),
-            "alt_change": thermal.alt_change(),
-        } for thermal in flight.thermals)
-        .set_index(
-            pd.to_datetime(
-                [thermal.enter_fix.timestamp for thermal in flight.thermals],
-                unit="s",
-                utc=True
-            )
-        )
-        .rename_axis("enter_time")
+    return pd.Series(
+        (pd.to_timedelta(thermal.time_change(), unit="s") for thermal in flight.thermals),
+        index=pd.to_datetime(
+            [thermal.enter_fix.timestamp for thermal in flight.thermals],
+            unit="s",
+            utc=True
+        ),
+        name="duration"
     )
