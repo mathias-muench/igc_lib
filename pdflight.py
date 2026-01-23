@@ -51,13 +51,8 @@ def thermals_to_dataframe(flight):
 
     Returns:
         A DataFrame where each row is a Thermal, with columns for:
-        - enter_time, exit_time: UTC datetime of entry/exit
-        - enter_lat, enter_lon: entry point coordinates
-        - exit_lat, exit_lon: exit point coordinates
         - duration: time spent in thermal (as timedelta)
         - alt_change: altitude change (meters)
-        - v_vel: average vertical velocity (m/s)
-        - enter_alt, exit_alt: entry/exit altitudes (meters)
 
         The index is set to the UTC datetime of the thermal entry.
 
@@ -69,17 +64,8 @@ def thermals_to_dataframe(flight):
 
     return (
         pd.DataFrame({
-            "enter_time": pd.to_datetime(thermal.enter_fix.timestamp, unit="s", utc=True),
-            "exit_time": pd.to_datetime(thermal.exit_fix.timestamp, unit="s", utc=True),
-            "enter_lat": thermal.enter_fix.lat,
-            "enter_lon": thermal.enter_fix.lon,
-            "exit_lat": thermal.exit_fix.lat,
-            "exit_lon": thermal.exit_fix.lon,
             "duration": pd.to_timedelta(thermal.time_change(), unit="s"),
             "alt_change": thermal.alt_change(),
-            "v_vel": thermal.vertical_velocity(),
-            "enter_alt": thermal.enter_fix.alt,
-            "exit_alt": thermal.exit_fix.alt,
         } for thermal in flight.thermals)
         .set_index(
             pd.to_datetime(
