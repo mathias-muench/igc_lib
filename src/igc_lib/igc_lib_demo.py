@@ -4,8 +4,8 @@ from __future__ import print_function
 import os
 import sys
 
-import igc_lib
-import lib.dumpers as dumpers
+import igc_lib.igc_lib as igc_lib
+import igc_lib.lib.dumpers as dumpers
 
 
 def print_flight_details(flight):

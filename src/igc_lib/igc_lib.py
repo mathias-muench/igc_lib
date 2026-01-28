@@ -33,8 +33,8 @@ from pathlib2 import Path
 
 from collections import defaultdict
 
-import lib.viterbi as viterbi
-import lib.geo as geo
+from .lib import viterbi
+from .lib import geo
 
 
 def _strip_non_printable_chars(string):

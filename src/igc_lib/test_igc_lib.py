@@ -1,6 +1,6 @@
 import unittest
 
-import igc_lib
+import igc_lib.igc_lib as igc_lib
 
 
 class TestBuildFromBRecord(unittest.TestCase):

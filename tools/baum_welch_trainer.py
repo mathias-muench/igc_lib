@@ -15,7 +15,7 @@ from Bio.Seq import Seq
 
 # A hack to import from the parent directory
 sys.path.insert(0, '..')
-import igc_lib
+import igc_lib.igc_lib as igc_lib
 
 
 def list_igc_files(directory):

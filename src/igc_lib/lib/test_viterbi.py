@@ -1,6 +1,6 @@
 import unittest
 
-import lib.viterbi as viterbi
+from . import viterbi
 
 
 class TestSimpleViterbiDecoder(unittest.TestCase):

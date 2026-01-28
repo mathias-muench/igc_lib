@@ -3,8 +3,8 @@ import shutil
 import unittest
 import tempfile
 
-import igc_lib
-import lib.dumpers as dumpers
+import igc_lib.igc_lib as igc_lib
+from . import dumpers
 
 
 class TestDumpers(unittest.TestCase):
