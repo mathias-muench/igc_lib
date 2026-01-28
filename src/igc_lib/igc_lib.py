@@ -266,6 +266,7 @@ class GNSSFix:
         bearing_change_rate: a float, bearing change rate, degrees/second
         flying: a bool, whether this fix is during a flight
         circling: a bool, whether this fix is inside a thermal
+        task: a bool, whether this fix is between START and FINISH times
     """
 
     @staticmethod
@@ -325,6 +326,7 @@ class GNSSFix:
         self.index = index
         self.extras = extras
         self.flight = None
+        self.task = False
 
     def set_flight(self, flight):
         """Sets parent Flight object."""
@@ -636,7 +638,7 @@ class Flight:
                             fixes.append(fix)
                 elif line[0] == 'I':
                     i_records.append(line)
-                elif line[0] == 'H':
+                elif line[0] == 'H' or line.startswith('LSCR::'):
                     h_records.append(line)
                 else:
                     # Do not parse any other types of IGC records
@@ -702,6 +704,7 @@ class Flight:
         self._compute_bearing_change_rates()
         self._compute_circling()
         self._find_thermals()
+        self._compute_task()
 
     def _parse_a_records(self, a_records):
         """Parses the IGC A record.
@@ -720,7 +723,7 @@ class Flight:
         self.i_record = _strip_non_printable_chars(" ".join(i_records))
 
     def _parse_h_records(self, h_records):
-        """Parses the IGC H records.
+        """Parses the IGC H records, including LSCR records.
 
         H records (header records) contain a lot of interesting metadata
         about the file, such as the date of the flight, name of the pilot,
@@ -728,7 +731,10 @@ class Flight:
         Consult the IGC manual for details.
         """
         for record in h_records:
-            self._parse_h_record(record)
+            if record.startswith('LSCR::'):
+                self._parse_lscr_record(record)
+            else:
+                self._parse_h_record(record)
 
     def _parse_h_record(self, record):
         if record[0:5] == 'HFDTE':
@@ -792,6 +798,23 @@ class Flight:
             if match:
                 (self.competition_class,) = map(_strip_non_printable_chars,
                                                 match.groups())
+
+    def _parse_lscr_record(self, record):
+        """Parses LSCR records (e.g., LSCR::START:2023-07-01T10:00:00)."""
+        if record.startswith('LSCR::START:'):
+            start_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
+            self.task_start_time = self._parse_iso_time(start_time_str)
+        elif record.startswith('LSCR::FINISH:'):
+            finish_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
+            self.task_finish_time = self._parse_iso_time(finish_time_str)
+
+    def _parse_iso_time(self, time_str):
+        """Converts ISO 8601 time string to timestamp (seconds since epoch)."""
+        try:
+            dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
+            return (dt - datetime.datetime(1970, 1, 1)).total_seconds() - 7200
+        except ValueError:
+            return None
 
     def __str__(self):
         descr = "Flight(valid=%s, fixes: %d" % (
@@ -1184,3 +1207,14 @@ class Flight:
         if gliding_now:
             glide = Glide(first_glide_fix, last_glide_fix, distance)
             self.glides.append(glide)
+
+    def _compute_task(self):
+        """Adds .task attribute to self.fixes, True if fix is between START and FINISH."""
+        if not hasattr(self, 'task_start_time') or not hasattr(self, 'task_finish_time'):
+            # No LSCR records, assume all fixes are outside task
+            for fix in self.fixes:
+                fix.task = False
+            return
+
+        for fix in self.fixes:
+            fix.task = (self.task_start_time <= fix.timestamp <= self.task_finish_time)
