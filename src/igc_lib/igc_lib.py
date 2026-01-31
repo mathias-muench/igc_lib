@@ -326,7 +326,6 @@ class GNSSFix:
         self.index = index
         self.extras = extras
         self.flight = None
-        self.task = False
 
     def set_flight(self, flight):
         """Sets parent Flight object."""
@@ -619,6 +618,7 @@ class Flight:
         a_records = []
         i_records = []
         h_records = []
+        l_records = []
         abs_filename = Path(filename).expanduser().absolute()
         with abs_filename.open('r', encoding="ISO-8859-1") as flight_file:
             for line in flight_file:
@@ -638,15 +638,17 @@ class Flight:
                             fixes.append(fix)
                 elif line[0] == 'I':
                     i_records.append(line)
-                elif line[0] == 'H' or line.startswith('LSCR::'):
+                elif line[0] == 'H':
                     h_records.append(line)
+                elif line[0] == 'L':
+                    l_records.append(line)
                 else:
                     # Do not parse any other types of IGC records
                     pass
-        flight = Flight(fixes, a_records, h_records, i_records, config)
+        flight = Flight(fixes, a_records, h_records, l_records, i_records, config)
         return flight
 
-    def __init__(self, fixes, a_records, h_records, i_records, config):
+    def __init__(self, fixes, a_records, h_records, l_records, i_records, config):
         """Initializer of the Flight class. Do not use directly."""
         self._config = config
         self.fixes = fixes
@@ -683,6 +685,8 @@ class Flight:
             self._parse_i_records(i_records)
         if h_records:
             self._parse_h_records(h_records)
+        if l_records:
+            self._parse_l_records(l_records)
 
         if not hasattr(self, 'date_timestamp'):
             self.notes.append("Error: no date record (HFDTE) in the file")
@@ -723,7 +727,7 @@ class Flight:
         self.i_record = _strip_non_printable_chars(" ".join(i_records))
 
     def _parse_h_records(self, h_records):
-        """Parses the IGC H records, including LSCR records.
+        """Parses the IGC H records.
 
         H records (header records) contain a lot of interesting metadata
         about the file, such as the date of the flight, name of the pilot,
@@ -731,10 +735,7 @@ class Flight:
         Consult the IGC manual for details.
         """
         for record in h_records:
-            if record.startswith('LSCR::'):
-                self._parse_lscr_record(record)
-            else:
-                self._parse_h_record(record)
+            self._parse_h_record(record)
 
     def _parse_h_record(self, record):
         if record[0:5] == 'HFDTE':
@@ -798,6 +799,19 @@ class Flight:
             if match:
                 (self.competition_class,) = map(_strip_non_printable_chars,
                                                 match.groups())
+
+    def _parse_l_records(self, l_records):
+        """Parses the IGC L records.
+
+        L records (log records) may contain additional metadata.
+        Consult the IGC manual for details.
+        """
+        for record in l_records:
+            self._parse_l_record(record)
+
+    def _parse_l_record(self, record):
+        if record[0:6] == 'LSCR::':
+            self._parse_lscr_record(record)
 
     def _parse_lscr_record(self, record):
         """Parses LSCR records (e.g., LSCR::START:2023-07-01T10:00:00)."""
