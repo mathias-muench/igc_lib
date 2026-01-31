@@ -594,6 +594,7 @@ class Flight:
         fr_recorder_type: a string, the type of the recorder
         fr_gps_receiver: a string, the used GPS receiver
         fr_pressure_sensor: a string, the used pressure sensor
+        date: date of flight (UTC)
 
     Other attributes:
         alt_source: a string, the chosen altitude sensor,
@@ -748,6 +749,7 @@ class Flight:
                 month = int(mm)
                 day = int(dd)
                 if 1 <= month <= 12 and 1 <= day <= 31:
+                    self.date = dd + mm + yy
                     epoch = datetime.datetime(year=1970, month=1, day=1)
                     date = datetime.datetime(year=year, month=month, day=day)
                     self.date_timestamp = (date - epoch).total_seconds()
@@ -1223,12 +1225,5 @@ class Flight:
             self.glides.append(glide)
 
     def _compute_task(self):
-        """Adds .task attribute to self.fixes, True if fix is between START and FINISH."""
-        if not hasattr(self, 'task_start_time') or not hasattr(self, 'task_finish_time'):
-            # No LSCR records, assume all fixes are outside task
-            for fix in self.fixes:
-                fix.task = False
-            return
-
         for fix in self.fixes:
-            fix.task = (self.task_start_time <= fix.timestamp <= self.task_finish_time)
+            fix.task = ((self.task_start_time or float('inf')) <= fix.timestamp <= (self.task_finish_time or self.landing_fix.timestamp))
