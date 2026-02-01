@@ -823,6 +823,10 @@ class Flight:
         elif record.startswith('LSCR::FINISH:'):
             finish_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
             self.task_finish_time = self._parse_iso_time(finish_time_str)
+        elif record.startswith('LSCR::POINTS:'):
+            self.points = int(record.split('::', 1)[1].split(':', 1)[1].strip())
+        elif record.startswith('LSCR::CONTESTANT:'):
+            self.pilot = record.split('::', 1)[1].split(':', 1)[1].strip()
 
     def _parse_iso_time(self, time_str):
         """Converts ISO 8601 time string to timestamp (seconds since epoch)."""
