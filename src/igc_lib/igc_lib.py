@@ -719,7 +719,7 @@ class Flight:
         device unique ID.
         """
         self.fr_manuf_code = _strip_non_printable_chars(a_records[0][1:4])
-        self.fr_uniq_id = _strip_non_printable_chars(a_records[0][4:7])
+        self.fr_uniq_id = _strip_non_printable_chars(a_records[0][4:9]) if self.fr_manuf_code == "FIL" else _strip_non_printable_chars(a_records[0][4:7])
 
     def _parse_i_records(self, i_records):
         """Parses the IGC I records.
