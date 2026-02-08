@@ -820,10 +820,10 @@ class Flight:
         """Parses LSCR records (e.g., LSCR::START:2023-07-01T10:00:00)."""
         if record.startswith('LSCR::START:'):
             start_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
-            self.task_start_time = self._parse_iso_time(start_time_str)
+            self.task_start_time = self._parse_iso_time(start_time_str) if start_time_str else None
         elif record.startswith('LSCR::FINISH:'):
             finish_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
-            self.task_finish_time = self._parse_iso_time(finish_time_str)
+            self.task_finish_time = self._parse_iso_time(finish_time_str) if finish_time_str else None
         elif record.startswith('LSCR::POINTS:'):
             self.points = int(record.split('::', 1)[1].split(':', 1)[1].strip())
         elif record.startswith('LSCR::CONTESTANT:'):
@@ -834,12 +834,8 @@ class Flight:
             self.competition_class = record.split('::', 1)[1].split(':', 1)[1].strip()
 
     def _parse_iso_time(self, time_str):
-        """Converts ISO 8601 time string to timestamp (seconds since epoch)."""
-        try:
-            dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
-            return (dt - datetime.datetime(1970, 1, 1)).total_seconds() - 7200
-        except ValueError:
-            return None
+        dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
+        return (dt - datetime.datetime(1970, 1, 1)).total_seconds() - 7200
 
     def __str__(self):
         descr = "Flight(valid=%s, fixes: %d" % (
@@ -1235,4 +1231,4 @@ class Flight:
 
     def _compute_task(self):
         for fix in self.fixes:
-            fix.task = (getattr(self, "task_start_time", float('inf')) <= fix.timestamp <= getattr(self, "task_finish_time", self.landing_fix.timestamp))
+            fix.task = ((getattr(self, "task_start_time", None) or float('inf')) <= fix.timestamp <= (getattr(self, "task_finish_time", None) or self.landing_fix.timestamp))
