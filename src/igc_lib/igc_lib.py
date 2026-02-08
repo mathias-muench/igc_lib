@@ -586,6 +586,7 @@ class Flight:
     define them):
         glider_type: a string, the declared glider type
         competition_class: a string, the declared competition class
+        competition: a string, the competition name (from LSCR::COMPETITION record)
         fr_manuf_code: a string, the flight recorder manufaturer code
         fr_uniq_id: a string, the flight recorded unique id
         i_record: a string, the I record (describing B record extensions)
@@ -827,6 +828,10 @@ class Flight:
             self.points = int(record.split('::', 1)[1].split(':', 1)[1].strip())
         elif record.startswith('LSCR::CONTESTANT:'):
             self.pilot = record.split('::', 1)[1].split(':', 1)[1].strip()
+        elif record.startswith('LSCR::COMPETITION:'):
+            self.competition = record.split('::', 1)[1].split(':', 1)[1].strip()
+        elif record.startswith('LSCR::CLASS:'):
+            self.competition_class = record.split('::', 1)[1].split(':', 1)[1].strip()
 
     def _parse_iso_time(self, time_str):
         """Converts ISO 8601 time string to timestamp (seconds since epoch)."""
@@ -1230,4 +1235,4 @@ class Flight:
 
     def _compute_task(self):
         for fix in self.fixes:
-            fix.task = ((self.task_start_time or float('inf')) <= fix.timestamp <= (self.task_finish_time or self.landing_fix.timestamp))
+            fix.task = (getattr(self, "task_start_time", float('inf')) <= fix.timestamp <= getattr(self, "task_finish_time", self.landing_fix.timestamp))
