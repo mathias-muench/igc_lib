@@ -819,11 +819,9 @@ class Flight:
     def _parse_lscr_record(self, record):
         """Parses LSCR records (e.g., LSCR::START:2023-07-01T10:00:00)."""
         if record.startswith('LSCR::START:'):
-            start_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
-            self.task_start_time = self._parse_iso_time(start_time_str) if start_time_str else None
+            self.start = record.split('::', 1)[1].split(':', 1)[1].strip()
         elif record.startswith('LSCR::FINISH:'):
-            finish_time_str = record.split('::', 1)[1].split(':', 1)[1].strip()
-            self.task_finish_time = self._parse_iso_time(finish_time_str) if finish_time_str else None
+            self.finish = record.split('::', 1)[1].split(':', 1)[1].strip()
         elif record.startswith('LSCR::POINTS:'):
             self.points = int(record.split('::', 1)[1].split(':', 1)[1].strip())
         elif record.startswith('LSCR::CONTESTANT:'):
@@ -1230,5 +1228,7 @@ class Flight:
             self.glides.append(glide)
 
     def _compute_task(self):
+        task_start_time = self._parse_iso_time(self.start) if getattr(self, "start", None) else float('inf')
+        task_finish_time = self._parse_iso_time(self.finish) if getattr(self, "finish", None) else self.landing_fix.timestamp
         for fix in self.fixes:
-            fix.task = ((getattr(self, "task_start_time", None) or float('inf')) <= fix.timestamp <= (getattr(self, "task_finish_time", None) or self.landing_fix.timestamp))
+            fix.task = task_start_time <= fix.timestamp <= task_finish_time
