@@ -585,7 +585,6 @@ class Flight:
     define them):
         glider_type: a string, the declared glider type
         competition_class: a string, the declared competition class
-        competition: a string, the competition name (from LSCR::COMPETITION record)
         fr_manuf_code: a string, the flight recorder manufaturer code
         fr_uniq_id: a string, the flight recorded unique id
         i_record: a string, the I record (describing B record extensions)
@@ -619,7 +618,6 @@ class Flight:
         a_records = []
         i_records = []
         h_records = []
-        l_records = []
         abs_filename = Path(filename).expanduser().absolute()
         with abs_filename.open('r', encoding="ISO-8859-1") as flight_file:
             for line in flight_file:
@@ -641,15 +639,13 @@ class Flight:
                     i_records.append(line)
                 elif line[0] == 'H':
                     h_records.append(line)
-                elif line[0] == 'L':
-                    l_records.append(line)
                 else:
                     # Do not parse any other types of IGC records
                     pass
-        flight = Flight(fixes, a_records, h_records, l_records, i_records, config)
+        flight = Flight(fixes, a_records, h_records, i_records, config)
         return flight
 
-    def __init__(self, fixes, a_records, h_records, l_records, i_records, config):
+    def __init__(self, fixes, a_records, h_records, i_records, config):
         """Initializer of the Flight class. Do not use directly."""
         self._config = config
         self.fixes = fixes
@@ -686,8 +682,6 @@ class Flight:
             self._parse_i_records(i_records)
         if h_records:
             self._parse_h_records(h_records)
-        if l_records:
-            self._parse_l_records(l_records)
 
         if not hasattr(self, 'date_timestamp'):
             self.notes.append("Error: no date record (HFDTE) in the file")
@@ -800,34 +794,6 @@ class Flight:
             if match:
                 (self.competition_class,) = map(_strip_non_printable_chars,
                                                 match.groups())
-
-    def _parse_l_records(self, l_records):
-        """Parses the IGC L records.
-
-        L records (log records) may contain additional metadata.
-        Consult the IGC manual for details.
-        """
-        for record in l_records:
-            self._parse_l_record(record)
-
-    def _parse_l_record(self, record):
-        if record[0:6] == 'LSCR::':
-            self._parse_lscr_record(record)
-
-    def _parse_lscr_record(self, record):
-        """Parses LSCR records (e.g., LSCR::START:2023-07-01T10:00:00)."""
-        if record.startswith('LSCR::START:'):
-            self.start = record.split('::', 1)[1].split(':', 1)[1].strip()
-        elif record.startswith('LSCR::FINISH:'):
-            self.finish = record.split('::', 1)[1].split(':', 1)[1].strip()
-        elif record.startswith('LSCR::POINTS:'):
-            self.points = int(record.split('::', 1)[1].split(':', 1)[1].strip())
-        elif record.startswith('LSCR::CONTESTANT:'):
-            self.pilot = record.split('::', 1)[1].split(':', 1)[1].strip()
-        elif record.startswith('LSCR::COMPETITION:'):
-            self.competition = record.split('::', 1)[1].split(':', 1)[1].strip()
-        elif record.startswith('LSCR::CLASS:'):
-            self.competition_class = record.split('::', 1)[1].split(':', 1)[1].strip()
 
     def __str__(self):
         descr = "Flight(valid=%s, fixes: %d" % (
