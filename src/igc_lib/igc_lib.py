@@ -266,7 +266,6 @@ class GNSSFix:
         bearing_change_rate: a float, bearing change rate, degrees/second
         flying: a bool, whether this fix is during a flight
         circling: a bool, whether this fix is inside a thermal
-        task: a bool, whether this fix is between START and FINISH times
     """
 
     @staticmethod
@@ -710,7 +709,6 @@ class Flight:
         self._compute_bearing_change_rates()
         self._compute_circling()
         self._find_thermals()
-        self._compute_task()
 
     def _parse_a_records(self, a_records):
         """Parses the IGC A record.
@@ -830,10 +828,6 @@ class Flight:
             self.competition = record.split('::', 1)[1].split(':', 1)[1].strip()
         elif record.startswith('LSCR::CLASS:'):
             self.competition_class = record.split('::', 1)[1].split(':', 1)[1].strip()
-
-    def _parse_iso_time(self, time_str):
-        dt = datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S")
-        return (dt - datetime.datetime(1970, 1, 1)).total_seconds() - 7200
 
     def __str__(self):
         descr = "Flight(valid=%s, fixes: %d" % (
@@ -1226,9 +1220,3 @@ class Flight:
         if gliding_now:
             glide = Glide(first_glide_fix, last_glide_fix, distance)
             self.glides.append(glide)
-
-    def _compute_task(self):
-        task_start_time = self._parse_iso_time(self.start) if getattr(self, "start", None) else float('inf')
-        task_finish_time = self._parse_iso_time(self.finish) if getattr(self, "finish", None) else self.landing_fix.timestamp
-        for fix in self.fixes:
-            fix.task = task_start_time <= fix.timestamp <= task_finish_time
